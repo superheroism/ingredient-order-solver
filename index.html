@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ingredient Order Solver</title>
+  <style>
+    :root {
+      --bg: #111827;
+      --fg: #e5e7eb;
+      --card-bg: #1f2937;
+      --border: #374151;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --input-bg: #111827;
+      --input-border: #4b5563;
+      --square-border: #4b5563;
+      --square-bg-unknown: #111827;
+      --square-bg-absent: #1f2937;
+      --square-bg-white: #92400e;
+      --square-bg-black: #166534;
+      --square-fg: #f9fafb;
+    }
+
+    body.light {
+      --bg: #f9fafb;
+      --fg: #111827;
+      --card-bg: #ffffff;
+      --border: #d1d5db;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --input-bg: #ffffff;
+      --input-border: #9ca3af;
+      --square-border: #9ca3af;
+      --square-bg-unknown: #f3f4f6;
+      --square-bg-absent: #e5e7eb;
+      --square-bg-white: #facc15;
+      --square-bg-black: #22c55e;
+      --square-fg: #111827;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    #app {
+      max-width: 900px;
+      width: 100%;
+      padding: 24px;
+    }
+
+    h1 {
+      margin-top: 0;
+      margin-bottom: 4px;
+      display: inline-block;
+    }
+
+    h2 {
+      margin-top: 24px;
+      margin-bottom: 8px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 10px 15px rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+    }
+
+    label {
+      margin-right: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    input[type="text"], input[type="number"], select {
+      padding: 4px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--fg);
+    }
+
+    button {
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: none;
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      margin-right: 8px;
+    }
+    button:hover {
+      background: var(--accent-hover);
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    #log {
+      font-family: "Consolas", "Courier New", monospace;
+      white-space: pre-wrap;
+      background: var(--input-bg);
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      height: 240px;
+      overflow-y: auto;
+    }
+
+    .row {
+      margin-bottom: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Tracker grid */
+    #tracker {
+      display: inline-block;
+      margin-top: 8px;
+    }
+    .tracker-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .tracker-square {
+      width: 40px;
+      height: 40px;
+      border-radius: 6px;
+      border: 1px solid var(--square-border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 16px;
+      color: var(--square-fg);
+    }
+    .tracker-square-label {
+      font-size: 11px;
+      opacity: 0.85;
+      margin-bottom: 1px;
+    }
+    .square-unknown {
+      background: var(--square-bg-unknown);
+    }
+    .square-absent {
+      background: var(--square-bg-absent);
+    }
+    .square-white {
+      background: var(--square-bg-white);
+    }
+    .square-black {
+      background: var(--square-bg-black);
+    }
+
+    #theme-toggle-container {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+    }
+    #guess-counter {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    /* Pill-shaped help button */
+    #help-icon-container {
+      position: relative;
+      display: inline-block;
+    }
+    #help-icon {
+      background: var(--accent);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 9999px;    /* pill shape */
+      font-size: 12px;
+      cursor: default;
+      user-select: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    #help-tooltip {
+      position: absolute;
+      top: 32px;
+      right: 0;
+      background: var(--card-bg);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      width: 260px;
+      font-size: 12px;
+      line-height: 1.4;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      z-index: 50;
+      display: none;
+    }
+    #help-icon-container:hover #help-tooltip {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="row" style="justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+      <div>
+        <h1>Ingredient Order Solver</h1>
+        <div id="guess-counter">Guesses: 0 / 12</div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+        <div id="theme-toggle-container">
+          <span>Theme:</span>
+          <select id="theme-toggle">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </div>
+
+        <!-- Pill-shaped help button -->
+        <div id="help-icon-container">
+          <span id="help-icon">ⓘ Help</span>
+          <div id="help-tooltip">
+            <strong>Tracker Legend</strong><br><br>
+            <b>Green (1 / 2 / 3):</b> Ingredient is in the order & its position is fixed.<br>
+            <b>Yellow (?):</b> Ingredient is in the order, position unknown.<br>
+            <b>Red (X):</b> Ingredient is not in the order.<br>
+            <b>Gray (_):</b> Unknown whether this ingredient is in the order.<br><br>
+            Top row: A–E<br>
+            Bottom row: F–J
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <label>
+          Mode:
+          <select id="mode">
+            <option value="interactive">Interactive (unknown order)</option>
+            <option value="sim">Simulation (known order)</option>
+          </select>
+        </label>
+
+        <span id="sim-secret-wrapper" style="display:none;">
+          <label>
+            Secret:
+            <input id="sim-secret" type="text" maxlength="3" placeholder="e.g. JAD" />
+          </label>
+          <button id="run-sim">Run Simulation</button>
+        </span>
+
+        <button id="new-game">New Game</button>
+      </div>
+
+      <div class="row" id="interactive-controls">
+        <button id="suggest">Suggest Next Guess</button>
+        <label>
+          Guess:
+          <input id="guess" type="text" maxlength="3" />
+        </label>
+        <label>
+          Correct placements:
+          <input id="b" type="number" min="0" max="3" value="0" />
+        </label>
+        <label>
+          Incorrect placements:
+          <input id="w" type="number" min="0" max="3" value="0" />
+        </label>
+        <button id="apply-feedback">Apply Feedback</button>
+      </div>
+
+      <div>
+        <strong>Tracker:</strong>
+        <div id="tracker"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Log</h2>
+      <div id="log"></div>
+    </div>
+  </div>
+
+<script>
+/* ============================================================
+   IngredientOrderSolver — logic engine
+   ============================================================ */
+class IngredientOrderSolver {
+  constructor(potions = "ABCDEFGHIJ", codeLen = 3, maxGuesses = 12) {
+    this.potions = potions;
+    this.codeLen = codeLen;
+    this.maxGuesses = maxGuesses;
+    this.universe = this._generateUniverse();
+    this.reset();
+  }
+
+  _generateUniverse() {
+    const letters = this.potions.split("");
+    const res = [];
+    const n = letters.length;
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        if (j === i) continue;
+        for (let k = 0; k < n; k++) {
+          if (k === i || k === j) continue;
+          res.push(letters[i] + letters[j] + letters[k]);
+        }
+      }
+    }
+    return res;
+  }
+
+  reset() {
+    this.history = [];
+    this.candidates = [...this.universe];
+    this.notes = this._deduceKnowledge(this.candidates);
+    this.status = "RUNNING";
+    this.solution = null;
+    this._lastGuess = null;
+  }
+
+  suggest() {
+    if (!this.history.length) this._lastGuess = "ABC";
+    else this._lastGuess = this._bestNextGuess(this.candidates, this.universe);
+    return this._lastGuess;
+  }
+
+  step(correct, incorrect, guess = null) {
+    if (guess == null) {
+      if (!this._lastGuess) throw new Error("No previous guess — press Suggest.");
+      guess = this._lastGuess;
+    }
+
+    this.history.push({ guess, correct, incorrect });
+
+    if (correct === this.codeLen) {
+      this.status = "SOLVED";
+      this.solution = guess;
+      this.candidates = [guess];
+      this.notes = this._deduceKnowledge(this.candidates);
+      return this.status;
+    }
+
+    this.candidates = this._consistentCodes(this.history, this.universe);
+    this.notes = this._deduceKnowledge(this.candidates);
+
+    if (this.candidates.length === 0) {
+      this.status = "UNSOLVABLE";
+      this.solution = null;
+    } else if (this.candidates.length === 1) {
+      this.status = "SOLVED";
+      this.solution = this.candidates[0];
+    }
+
+    return this.status;
+  }
+
+  simulate(secret) {
+    secret = this._validateSecret(secret);
+    this.reset();
+    for (let g = 1; g <= this.maxGuesses; g++) {
+      if (this.candidates.length === 0) {
+        this.status = "UNSOLVABLE";
+        break;
+      }
+      if (this.candidates.length === 1) {
+        this.status = "SOLVED";
+        this.solution = this.candidates[0];
+        break;
+      }
+      const guess = this.suggest();
+      const { correct, incorrect } = this._score(guess, secret);
+      this.step(correct, incorrect, guess);
+      if (this.status !== "RUNNING") break;
+    }
+    return { history: this.history, status: this.status };
+  }
+
+  getTrackerState() {
+    const per = this.notes.perPotion || {};
+    const rows = ["ABCDE", "FGHIJ"];
+    return rows.map(row =>
+      [...row].map(ch => {
+        const status = (per[ch] && per[ch].status) || "unknown";
+        let state = "unknown";
+        let symbol = "_";
+        if (status.startsWith("black@")) {
+          state = "black";
+          symbol = String(parseInt(status.split("@")[1], 10) + 1);
+        } else if (status === "white") {
+          state = "white";
+          symbol = "?";
+        } else if (status === "absent") {
+          state = "absent";
+          symbol = "X";
+        }
+        return { letter: ch, state, symbol };
+      })
+    );
+  }
+
+  _score(guess, secret) {
+    let correct = 0;
+    for (let i = 0; i < this.codeLen; i++) {
+      if (guess[i] === secret[i]) correct++;
+    }
+    const overlap =
+      [...new Set(guess)].filter(ch => secret.includes(ch)).length;
+    const incorrect = overlap - correct;
+    return { correct, incorrect };
+  }
+
+  _consistentCodes(history, universe) {
+    return universe.filter(code =>
+      history.every(({ guess, correct, incorrect }) => {
+        const s = this._score(guess, code);
+        return s.correct === correct && s.incorrect === incorrect;
+      })
+    );
+  }
+
+  _bestNextGuess(candidates, universe) {
+    const space = candidates.length ? candidates : universe;
+    let best = null;
+    let bestWorst = Infinity;
+    let bestIsCand = false;
+
+    for (const g of space) {
+      const buckets = {};
+      for (const c of candidates) {
+        const s = this._score(g, c);
+        const key = `${s.correct},${s.incorrect}`;
+        buckets[key] = (buckets[key] || 0) + 1;
+      }
+      const worst = Object.values(buckets).length
+        ? Math.max(...Object.values(buckets))
+        : 0;
+
+      const isCand = candidates.includes(g);
+      if (
+        worst < bestWorst ||
+        (worst === bestWorst && isCand && !bestIsCand)
+      ) {
+        best = g;
+        bestWorst = worst;
+        bestIsCand = isCand;
+      }
+    }
+    return best || space[0];
+  }
+
+  _deduceKnowledge(candidates) {
+    const per = {};
+    if (!candidates.length) {
+      for (const ch of this.potions) per[ch] = { status: "unknown" };
+      return { perPotion: per };
+    }
+
+    const n = candidates.length;
+    const letterCount = {};
+    const letterPos = {};
+    for (const ch of this.potions) {
+      letterCount[ch] = 0;
+      letterPos[ch] = new Array(this.codeLen).fill(0);
+    }
+
+    for (const code of candidates) {
+      const setC = new Set(code);
+      for (const ch of setC) letterCount[ch]++;
+      for (let i = 0; i < this.codeLen; i++) {
+        letterPos[code[i]][i]++;
+      }
+    }
+
+    for (const ch of this.potions) {
+      if (letterCount[ch] === 0) {
+        per[ch] = { status: "absent" };
+      } else if (letterCount[ch] === n) {
+        let fixed = null;
+        for (let i = 0; i < this.codeLen; i++) {
+          if (letterPos[ch][i] === n) fixed = i;
+        }
+        per[ch] = fixed !== null ? { status: `black@${fixed}` } : { status: "white" };
+      } else {
+        per[ch] = { status: "unknown" };
+      }
+    }
+
+    return { perPotion: per };
+  }
+
+  _validateSecret(secret) {
+    secret = secret.toUpperCase();
+    if (secret.length !== this.codeLen)
+      throw new Error("Secret must be 3 letters.");
+    for (const ch of secret) {
+      if (!this.potions.includes(ch))
+        throw new Error("Secret must use A–J only.");
+    }
+    if (new Set(secret).size !== this.codeLen)
+      throw new Error("Secret letters must be distinct.");
+    return secret;
+  }
+}
+
+/* ============================================================
+   UI Wiring
+   ============================================================ */
+const modeSelect = document.getElementById("mode");
+const simSecretWrapper = document.getElementById("sim-secret-wrapper");
+const simSecretInput = document.getElementById("sim-secret");
+const runSimButton = document.getElementById("run-sim");
+const newGameButton = document.getElementById("new-game");
+
+const interactiveControls = document.getElementById("interactive-controls");
+const suggestButton = document.getElementById("suggest");
+const guessInput = document.getElementById("guess");
+const bInput = document.getElementById("b");
+const wInput = document.getElementById("w");
+const applyFeedbackButton = document.getElementById("apply-feedback");
+
+const trackerDiv = document.getElementById("tracker");
+const logDiv = document.getElementById("log");
+const themeToggle = document.getElementById("theme-toggle");
+const guessCounter = document.getElementById("guess-counter");
+
+let game = new IngredientOrderSolver();
+
+function log(msg) {
+  logDiv.textContent += msg + "\n";
+  logDiv.scrollTop = logDiv.scrollHeight;
+}
+
+function renderTracker() {
+  const rows = game.getTrackerState();
+  trackerDiv.innerHTML = "";
+  rows.forEach(row => {
+    const rowDiv = document.createElement("div");
+    rowDiv.className = "tracker-row";
+    row.forEach(cell => {
+      const square = document.createElement("div");
+      square.classList.add("tracker-square");
+      if (cell.state === "black") square.classList.add("square-black");
+      else if (cell.state === "white") square.classList.add("square-white");
+      else if (cell.state === "absent") square.classList.add("square-absent");
+      else square.classList.add("square-unknown");
+
+      const label = document.createElement("div");
+      label.className = "tracker-square-label";
+      label.textContent = cell.letter;
+
+      const symbol = document.createElement("div");
+      symbol.textContent = cell.symbol;
+
+      square.appendChild(label);
+      square.appendChild(symbol);
+      rowDiv.appendChild(square);
+    });
+    trackerDiv.appendChild(rowDiv);
+  });
+}
+
+function updateGuessCounter() {
+  guessCounter.textContent = `Guesses: ${game.history.length} / ${game.maxGuesses}`;
+}
+
+function resetGame() {
+  game.reset();
+  logDiv.textContent = "";
+  guessInput.value = "";
+  bInput.value = "0";
+  wInput.value = "0";
+  renderTracker();
+  updateGuessCounter();
+  log("Game reset. Status: RUNNING.");
+}
+
+// Theme toggle
+themeToggle.addEventListener("change", () => {
+  document.body.classList.toggle("light", themeToggle.value === "light");
+});
+
+// Mode
+modeSelect.addEventListener("change", () => {
+  const sim = modeSelect.value === "sim";
+  simSecretWrapper.style.display = sim ? "" : "none";
+  interactiveControls.style.display = sim ? "none" : "flex";
+  resetGame();
+});
+
+newGameButton.addEventListener("click", resetGame);
+
+// Interactive guessing
+suggestButton.addEventListener("click", () => {
+  if (game.status !== "RUNNING") {
+    log(`Game finished: ${game.status}. Reset to play again.`);
+    return;
+  }
+  if (game.candidates.length === 0) {
+    log("⚠ No valid ingredient orders remain — no solution possible.");
+    return;
+  }
+  if (game.candidates.length === 1) {
+    log(`🎉 Only one possible order remains: ${game.candidates[0]}`);
+    guessInput.value = game.candidates[0];
+    return;
+  }
+  const guess = game.suggest();
+  guessInput.value = guess;
+  log(`Suggested guess: ${guess}`);
+  renderTracker();
+});
+
+applyFeedbackButton.addEventListener("click", () => {
+  if (game.status !== "RUNNING") {
+    log(`Game finished: ${game.status}. Reset to play again.`);
+    return;
+  }
+  let guess = (guessInput.value || "").toUpperCase();
+  if (!guess) guess = game._lastGuess || "";
+
+  if (
+    guess.length !== 3 ||
+    new Set(guess).size !== 3 ||
+    [...guess].some(ch => !game.potions.includes(ch))
+  ) {
+    alert("Guess must be 3 distinct letters A–J.");
+    return;
+  }
+
+  const correct = parseInt(bInput.value, 10) || 0;
+  const incorrect = parseInt(wInput.value, 10) || 0;
+
+  const status = game.step(correct, incorrect, guess);
+  log(
+    `Feedback: correct=${correct}, incorrect=${incorrect} → status=${status}; remaining=${game.candidates.length}`
+  );
+  updateGuessCounter();
+
+  if (status === "SOLVED") {
+    log(`✔ SOLVED: ${game.solution}`);
+    alert(`You found the correct ingredient order: ${game.solution}!`);
+  } else if (status === "UNSOLVABLE") {
+    log("✖ No valid ingredient orders remain — no solution possible.");
+    alert("No valid orders remain. Check earlier feedback.");
+  } else if (game.candidates.length === 1 && !game.solution) {
+    log(`🎉 Only one possible ingredient order remains: ${game.candidates[0]}`);
+  }
+
+  if (game.solution) guessInput.value = game.solution;
+  renderTracker();
+});
+
+// Simulation mode
+runSimButton.addEventListener("click", () => {
+  const secret = simSecretInput.value.trim().toUpperCase();
+  try {
+    resetGame();
+    const { history, status } = game.simulate(secret);
+    log(`Simulation with secret: ${secret}`);
+    history.forEach((h, i) => {
+      log(`Guess ${i + 1}: ${h.guess} → correct=${h.correct}, incorrect=${h.incorrect}`);
+    });
+    log(`Final status: ${status}; solution: ${game.solution || "None"}`);
+    updateGuessCounter();
+
+    if (status === "SOLVED") {
+      alert(`Solved: ${game.solution} in ${history.length} guesses.`);
+    } else if (status === "UNSOLVABLE") {
+      alert("No valid orders remain — no solution possible.");
+    }
+    renderTracker();
+  } catch (e) {
+    alert(e.message || String(e));
+  }
+});
+
+// Initial draw
+resetGame();
+</script>
+
+</body>
+</html>
