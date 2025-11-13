@@ -11,11 +11,71 @@ This project includes:
 - **Light/Dark mode toggle**  
 - **A reference Python implementation** of the solver algorithm  
 - **Simulation mode** to test the solver against known sequences  
-
 ---
 
 ## Live Implementation
 
 https://superheroism.github.io/ingredient-order-solver/
-
 ---
+
+## Features
+
+- **Optimal Guessing Strategy**  
+  Uses a minimax feedback-bucketing approach (similar to Knuth’s Mastermind algorithm).
+
+- **Real-Time Deduction Grid**  
+  - 🟩 Green: ingredient placement known  
+  - 🟨 Yellow: ingredient present but position unknown  
+  - 🟥 Red: ingredient excluded  
+  - ⬛ Gray: unknown  
+
+- **Theme Toggle**  
+  Dark and Light mode built in.
+
+- **Two Modes**  
+  - **Interactive Mode** — user enters feedback about each successive guess, and receives recommendations.
+  - **Simulation Mode** — the solver automatically selects the recommended guess at each step, and tracks its progress.
+
+- **No Server Required**  
+  Works entirely in the browser (HTML + JS).  
+---
+
+## Project Structure
+```
+ingredient-order-solver/
+│
+├── index.html              # Main web app (JS, CSS, solver logic)
+│
+├── python/
+│ └── ingredient_solver.py  # Reference Python implementation
+│
+├── docs/
+│ └── algorithm-notes.md    # Explanation of deduction logic
+│
+├── README.md               # You are here!
+└── LICENSE                 # MIT License
+```
+---
+
+## Getting Started
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/superheroism/ingredient-order-solver.git
+cd ingredient-order-solver
+```
+
+### 2. Run the solver (Web App)
+
+Just visit:
+https://superheroism.github.io/ingredient-order-solver/
+
+Or, open the following file from the repo in any browser:
+```index.html```
+
+Or, run the Python solver:
+```bash
+cd python
+python ingredient_solver.py
+```
