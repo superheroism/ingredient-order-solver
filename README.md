@@ -79,3 +79,7 @@ Or, run the Python solver:
 cd python
 python ingredient_solver.py
 ```
+
+### License
+
+This project is licensed under the MIT License.
