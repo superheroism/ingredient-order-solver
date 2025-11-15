@@ -48,7 +48,7 @@ ingredient-order-solver/
 ├── python/
 │ └── ingredient_solver.py  # Reference Python implementation
 │
-├── docs/
+├── notes/
 │ └── algorithm-notes.md    # Explanation of deduction logic
 │
 ├── README.md               # You are here!
