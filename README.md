@@ -13,9 +13,7 @@ This project includes:
 - **Simulation mode** to test the solver against known sequences  
 ---
 
-## Live Implementation
-
-[Click here!](https://superheroism.github.io/ingredient-order-solver/)
+## Live Implementation: [Click here!](https://superheroism.github.io/ingredient-order-solver/)
 ---
 
 ## Features
@@ -31,14 +29,14 @@ This project includes:
   - Uncolored: unknown
 
 - **Theme Toggle**  
-  Dark and Light mode built in.
+    Dark and Light mode built in.
 
 - **Two Modes**  
   - **Interactive Mode** — user enters feedback about each successive guess, and receives recommendations.
   - **Simulation Mode** — the solver automatically selects the recommended guess at each step, and tracks its progress.
 
 - **No Server Required**  
-  Works entirely in the browser (HTML + JS).  
+    Works entirely in the browser (HTML + JS).  
 ---
 
 ## Project Structure
