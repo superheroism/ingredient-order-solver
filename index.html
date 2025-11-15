@@ -187,7 +187,7 @@
       background: var(--accent);
       color: white;
       padding: 4px 10px;
-      border-radius: 9999px;    /* pill shape */
+      border-radius: 9999px;
       font-size: 12px;
       cursor: default;
       user-select: none;
@@ -215,6 +215,34 @@
     #help-icon-container:hover #help-tooltip {
       display: block;
     }
+
+    /* NEW: side-by-side tracker + guess log */
+    .viz-row { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+    .viz-col { flex: 1 1 360px; }
+
+    #guess-log-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    #guess-log-table th,
+    #guess-log-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      color: var(--fg);
+    }
+    #guess-log-table thead th {
+      background: var(--card-bg);
+      color: var(--fg);
+      opacity: 0.8;
+      font-weight: 600;
+    }
+    #guess-log-table tbody tr:hover { background: var(--card-bg); }
   </style>
 </head>
 <body>
@@ -234,17 +262,27 @@
           </select>
         </div>
 
-        <!-- Pill-shaped help button -->
+        <!-- Help Button -->
         <div id="help-icon-container">
           <span id="help-icon">ⓘ Help</span>
           <div id="help-tooltip">
             <strong>Tracker Legend</strong><br><br>
-            <b>Green (1 / 2 / 3):</b> Ingredient is in the order & its position is fixed.<br>
-            <b>Yellow (?):</b> Ingredient is in the order, position unknown.<br>
-            <b>Red (X):</b> Ingredient is not in the order.<br>
-            <b>Gray (_):</b> Unknown whether this ingredient is in the order.<br><br>
-            Top row: A–E<br>
-            Bottom row: F–J
+
+            <b>Green (1 / 2 / 3):</b><br>
+            Ingredient is in the correct position; the number indicates which position.<br><br>
+
+            <b>Yellow (?):</b><br>
+            Ingredient is in the correct set of 3 ingredients but the position is not yet known.<br><br>
+
+            <b>Gray (X):</b><br>
+            Ingredient is confirmed <i>not</i> to be part of the secret order.<br><br>
+
+            <b>No Color (_):</b><br>
+            No information yet; this ingredient may or may not be part of the order.<br><br>
+
+            <b>Layout:</b><br>
+            Top row = A–E<br>
+            Bottom row = F–J
           </div>
         </div>
       </div>
@@ -288,9 +326,28 @@
         <button id="apply-feedback">Apply Feedback</button>
       </div>
 
-      <div>
-        <strong>Tracker:</strong>
-        <div id="tracker"></div>
+      <!-- Side-by-side Tracker + Guess Log -->
+      <div id="viz-row" class="viz-row">
+        <div class="viz-col">
+          <strong>Tracker:</strong>
+          <div id="tracker"></div>
+        </div>
+
+        <section id="guess-log-panel" class="viz-col" aria-label="Guess Log">
+          <h3 style="margin: 0 0 8px;">Guess Log</h3>
+          <table id="guess-log-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Guess</th>
+                <th>Right Placements</th>
+                <th>Wrong Placements</th>
+                <th>Valid Sequences</th>
+              </tr>
+            </thead>
+            <tbody id="guess-log-body"></tbody>
+          </table>
+        </section>
       </div>
     </div>
 
@@ -336,12 +393,24 @@ class IngredientOrderSolver {
     this.status = "RUNNING";
     this.solution = null;
     this._lastGuess = null;
+
+    this.turnLog = []; /* NEW */
   }
 
   suggest() {
     if (!this.history.length) this._lastGuess = "ABC";
     else this._lastGuess = this._bestNextGuess(this.candidates, this.universe);
     return this._lastGuess;
+  }
+
+  _appendLog(guess, correct, incorrect, remain) {
+    this.turnLog.push({
+      turn: this.turnLog.length + 1,
+      guess,
+      b: correct,
+      w: incorrect,
+      remain
+    });
   }
 
   step(correct, incorrect, guess = null) {
@@ -357,6 +426,7 @@ class IngredientOrderSolver {
       this.solution = guess;
       this.candidates = [guess];
       this.notes = this._deduceKnowledge(this.candidates);
+      this._appendLog(guess, correct, incorrect, this.candidates.length); /* NEW */
       return this.status;
     }
 
@@ -371,6 +441,7 @@ class IngredientOrderSolver {
       this.solution = this.candidates[0];
     }
 
+    this._appendLog(guess, correct, incorrect, this.candidates.length); /* NEW */
     return this.status;
   }
 
@@ -543,6 +614,30 @@ const logDiv = document.getElementById("log");
 const themeToggle = document.getElementById("theme-toggle");
 const guessCounter = document.getElementById("guess-counter");
 
+/* NEW: Guess Log DOM refs */
+const guessLogBody  = document.getElementById("guess-log-body");
+const guessLogPanel = document.getElementById("guess-log-panel");
+
+function clearGuessLog() {
+  if (guessLogBody) guessLogBody.innerHTML = "";
+}
+function appendGuessLogRow({ turn, guess, b, w, remain }) {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td>${turn}</td>
+    <td>${guess}</td>
+    <td>${b}</td>
+    <td>${w}</td>
+    <td>${remain}</td>
+  `;
+  guessLogBody.appendChild(tr);
+}
+function renderGuessLog(solver) {
+  if (!guessLogPanel) return;
+  clearGuessLog();
+  for (const row of solver.turnLog) appendGuessLogRow(row);
+}
+
 let game = new IngredientOrderSolver();
 
 function log(msg) {
@@ -586,6 +681,7 @@ function updateGuessCounter() {
 function resetGame() {
   game.reset();
   logDiv.textContent = "";
+  clearGuessLog();
   guessInput.value = "";
   bInput.value = "0";
   wInput.value = "0";
@@ -594,12 +690,10 @@ function resetGame() {
   log("Game reset. Status: RUNNING.");
 }
 
-// Theme toggle
 themeToggle.addEventListener("change", () => {
   document.body.classList.toggle("light", themeToggle.value === "light");
 });
 
-// Mode
 modeSelect.addEventListener("change", () => {
   const sim = modeSelect.value === "sim";
   simSecretWrapper.style.display = sim ? "" : "none";
@@ -609,7 +703,6 @@ modeSelect.addEventListener("change", () => {
 
 newGameButton.addEventListener("click", resetGame);
 
-// Interactive guessing
 suggestButton.addEventListener("click", () => {
   if (game.status !== "RUNNING") {
     log(`Game finished: ${game.status}. Reset to play again.`);
@@ -667,10 +760,11 @@ applyFeedbackButton.addEventListener("click", () => {
   }
 
   if (game.solution) guessInput.value = game.solution;
+
   renderTracker();
+  renderGuessLog(game);
 });
 
-// Simulation mode
 runSimButton.addEventListener("click", () => {
   const secret = simSecretInput.value.trim().toUpperCase();
   try {
@@ -689,12 +783,12 @@ runSimButton.addEventListener("click", () => {
       alert("No valid orders remain — no solution possible.");
     }
     renderTracker();
+    renderGuessLog(game);
   } catch (e) {
     alert(e.message || String(e));
   }
 });
 
-// Initial draw
 resetGame();
 </script>
 
