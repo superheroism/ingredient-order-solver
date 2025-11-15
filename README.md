@@ -15,19 +15,20 @@ This project includes:
 
 ## Live Implementation
 
-https://superheroism.github.io/ingredient-order-solver/
+[Click here!](https://superheroism.github.io/ingredient-order-solver/)
 ---
 
 ## Features
 
 - **Optimal Guessing Strategy**  
-  Uses a minimax feedback-bucketing approach (similar to Knuth’s Mastermind algorithm).
+  - Uses a minimax feedback-bucketing approach (similar to Knuth’s Mastermind algorithm).
+  - Guaranteed to find a solution in [7 or fewer steps](https://github.com/superheroism/ingredient-order-solver/blob/main/notes/CAS%20Algorithm%20Histogram.png).
 
 - **Real-Time Deduction Grid**  
-  - 🟩 Green: ingredient placement known  
-  - 🟨 Yellow: ingredient present but position unknown  
-  - 🟥 Red: ingredient excluded  
-  - ⬛ Gray: unknown  
+  - 🟩 Green: ingredient is in the correct position
+  - 🟨 Yellow: ingredient is in the correct set, but the position is unknown
+  - ⬛ Gray: ingredient is *not* in the correct set.
+  - Uncolored: unknown
 
 - **Theme Toggle**  
   Dark and Light mode built in.
@@ -68,8 +69,8 @@ cd ingredient-order-solver
 
 ### 2. Run the solver (Web App)
 
-Just visit:
-https://superheroism.github.io/ingredient-order-solver/
+Use the live implementation, hosted here on GitHub:
+[Click here!](https://superheroism.github.io/ingredient-order-solver/)
 
 Or, open the following file from the repo in any browser:
 ```index.html```
