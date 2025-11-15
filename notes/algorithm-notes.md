@@ -1,4 +1,4 @@
-Algorithm Overview
+**Algorithm Overview**
 
 The solver uses:
 
@@ -18,3 +18,4 @@ This is visualized in the color-coded tracker.
 3. Efficient Search
 	- With only 720 possible sequences (10 choose 3 × permutations), the solver converges rapidly in simulation and interactive play.
  	- We expect solutions within the allotted number of guesses (confirmed, see histogram!
+
